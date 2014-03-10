@@ -15,12 +15,12 @@ import Jama.Matrix;
  * @author TungNT
  */
 public class Problem {
-    int n;
-    int b;
-    double[][] c;
-    Matrix Q;
-    Matrix q;
-    Matrix I, e;
+    private int n;
+    private int b;
+    private double[][] c;
+    private Matrix Q;
+    private Matrix q;
+    private Matrix I, e;
     
     public Problem(int n) {
         this.n = n;
@@ -101,6 +101,22 @@ public class Problem {
             }
         }
         return min;
+    }
+
+    public int getN() {
+        return n;
+    }
+
+    public int getB() {
+        return b;
+    }
+
+    public Matrix getQ() {
+        return Q;
+    }
+
+    public Matrix get_q() {
+        return q;
     }
     
 }
