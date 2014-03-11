@@ -20,7 +20,7 @@ public class ImportProblem {
         
     }
     
-    public void importFromFile(File file) throws Exception {
+    public Problem importFromFile(File file) throws Exception {
         Scanner in = new Scanner(file);
         int b = in.nextInt();
         int n = in.nextInt();
@@ -37,5 +37,6 @@ public class ImportProblem {
             throw new Exception();
         }
         pb.makePositiveSemidefinite();
+        return pb;
     }
 }

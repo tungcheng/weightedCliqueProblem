@@ -12,7 +12,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import weightedcliqueproblem.control.BranchBound;
 import weightedcliqueproblem.control.ImportProblem;
+import weightedcliqueproblem.model.Problem;
 
 /**
  *
@@ -23,6 +25,7 @@ public class MainFrame extends javax.swing.JFrame {
     static private final String newline = "\n";
     JFileChooser fc;
     ImportProblem importProb;
+    Problem mainProb;
 
     /**
      * Creates new form MainFrame
@@ -54,6 +57,7 @@ public class MainFrame extends javax.swing.JFrame {
         log = new javax.swing.JTextArea();
         bttImport = new javax.swing.JButton();
         bttExport = new javax.swing.JButton();
+        bttSolve = new javax.swing.JButton();
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -91,6 +95,13 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
 
+        bttSolve.setText("Solve");
+        bttSolve.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bttSolveActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -99,9 +110,10 @@ public class MainFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 309, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(bttImport, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(bttExport, javax.swing.GroupLayout.Alignment.TRAILING))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(bttImport, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(bttExport, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(bttSolve, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -113,7 +125,9 @@ public class MainFrame extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addGap(21, 21, 21)
                 .addComponent(bttImport)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(22, 22, 22)
+                .addComponent(bttSolve)
+                .addGap(18, 18, 18)
                 .addComponent(bttExport)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -133,7 +147,8 @@ public class MainFrame extends javax.swing.JFrame {
             try {
                 File file = fc.getSelectedFile();
                 log.append("Opening: " + file.getName() + "." + newline);
-                importProb.importFromFile(file);
+                mainProb = importProb.importFromFile(file);
+                log.append("Done. Ready to solve.");
             } catch (Exception ex) {
                 log.append("Error: Cannot import data from file");
             }
@@ -142,6 +157,13 @@ public class MainFrame extends javax.swing.JFrame {
         }
         log.setCaretPosition(log.getDocument().getLength());
     }//GEN-LAST:event_bttImportActionPerformed
+
+    private void bttSolveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttSolveActionPerformed
+        // TODO add your handling code here:
+        if(mainProb != null) {
+            BranchBound solver = new BranchBound(mainProb);
+        }
+    }//GEN-LAST:event_bttSolveActionPerformed
 
     /**
      * @param args the command line arguments
@@ -181,6 +203,7 @@ public class MainFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bttExport;
     private javax.swing.JButton bttImport;
+    private javax.swing.JButton bttSolve;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable jTable1;

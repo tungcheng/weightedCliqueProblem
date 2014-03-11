@@ -119,4 +119,20 @@ public class Problem {
         return q;
     }
     
+    public double getValue(double[] x) {
+        double[][] temp = new double[x.length][1];
+        for(int i=0; i<this.n; i++) {
+            temp[i][0] = x[i];
+        }
+        Matrix mX = new Matrix(temp);
+
+        Matrix t = mX.inverse().times(Q);
+        Matrix t2 = t.times(mX);
+        Matrix t3 = q.inverse().times(mX);
+        
+        double obj_value;
+        obj_value = 0.5 * t2.get(0, 0) + t3.get(0, 0);
+        return obj_value;
+    }
+    
 }

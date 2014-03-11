@@ -21,12 +21,15 @@ public class SubProblem extends Ipopt {
     double[][] temp;
     private Matrix mX;
     
-    public SubProblem(int n, int m, int b, double[][] Q, double[][] q) {
+    private int[] indexX;
+    
+    public SubProblem(int n, int m, int b, double[][] Q, double[][] q, int[] indexX) {
         this.n = n;
         this.m = m;
         this.b = b;
         this.mQ = new Matrix(Q);
         this.mq = new Matrix(q);
+        this.indexX = indexX;
         
         temp = new double[this.n][1];
         mX = new Matrix(temp);
@@ -164,4 +167,28 @@ public class SubProblem extends Ipopt {
             }
             return true;
     }    
+
+    public int getN() {
+        return n;
+    }
+
+    public int getM() {
+        return m;
+    }
+
+    public int getB() {
+        return b;
+    }
+
+    public Matrix getmQ() {
+        return mQ;
+    }
+
+    public Matrix getMq() {
+        return mq;
+    }
+
+    public int[] getIndexX() {
+        return indexX;
+    }
 }
