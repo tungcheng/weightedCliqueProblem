@@ -30,7 +30,7 @@ public class ImportProblem {
         for(int i=0; i<n; i++) {
             for(int j=0; j<n; j++) {
                 t = in.nextDouble();
-                pb.setC(t, i, j);
+                pb.setC((-1)*t, i, j);
             }
         }
         if(!pb.isSymmetric()) {

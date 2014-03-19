@@ -8,7 +8,9 @@ package weightedcliqueproblem.control;
 
 import Jama.Matrix;
 import weightedcliqueproblem.model.Problem;
+import weightedcliqueproblem.model.ProblemSet;
 import weightedcliqueproblem.model.SubProblem;
+import weightedcliqueproblem.tool.Tool;
 
 /**
  *
@@ -16,103 +18,139 @@ import weightedcliqueproblem.model.SubProblem;
  */
 public class BranchBound {
     
+    private Problem mainProb;
+    private double upperBound;
+    private double[] bestX;
+    private ProblemSet probSet;
+    
     public BranchBound (Problem prob) {
         mainProb = prob;
-        bestRecord = (-1)*Double.MAX_VALUE;
         
-        int[] startIndex = new int[prob.getN()];
-        curX = new double[prob.getN()];
-        for(int i=0; i < curX.length; i++) {
-            curX[i] = -1;
-            startIndex[i] = i;
-            // curX[i] = -1 if x[i] is not integer
-            // curX[i] = x[i] if x[i] is integer
-        }
+        bestX = new double[prob.getN()];
         
-        this.branchBound(new SubProblem(
-                prob.getN(),
-                1,
-                prob.getB(),
-                prob.getQ().getArray(),
-                prob.get_q().getArray(),
-                startIndex
-        ));
+        this.init();
         
-        showResult();
+        //this.branchBound();
     }
     
-    private Problem mainProb;
-    private double bestRecord;
-    private Matrix bestX;
-    
-    private double[] curX;
-    
-    private double upperBound;
-    
-    private void branchBound (SubProblem subProb) {
+    private void init() {
+        upperBound = Double.MAX_VALUE;
+        probSet = new ProblemSet();
         
-        double x[] = subProb.getInitialGuess();
+        int[] startIndex = new int[mainProb.getN()];
+        double[] preX = new double[mainProb.getN()];
+        for(int i=0; i < startIndex.length; i++) {
+            startIndex[i] = i;
+            preX[i] = -1;
+        }
+        
+        SubProblem startProb = new SubProblem(
+            mainProb.getN(),
+            1,
+            mainProb.getB(),
+            mainProb.getQ().getArray(),
+            mainProb.get_q().getArray(),
+            startIndex,
+            preX
+        );
+        
+        double[] x = startProb.getInitialGuess();
+        startProb.solve(x);
+        startProb.setBestX(x);
+        
+        if(Tool.getTool().isAllInteger(x)) {
+            // ra ket qua luon
+        }
+        
+        probSet.add(startProb);
+    }
+
+    private void branchBound() {
+        while(true) {
+            SubProblem subProb = probSet.getMin();
+            int subIndex = this.findSubIndex(subProb.getBestX());
+            
+            double[][] subQ = this.createSubProbMatrixQ(subIndex, subProb.getmQ().getArray());
+            double[][] sub_q = this.createSubProbMatrix_q(subIndex, subProb.getMq().getArray());
+            int[] subIndexX = this.createSubProbIndexX(subIndex, subProb.getIndexX());
+            
+            double[] preX_0 = subProb.getPreX().clone();
+            preX_0[subProb.getIndexX()[subIndex]] = 0;
+            SubProblem subProb_0 = new SubProblem(
+                subProb.getN()-1,
+                subProb.getM(),
+                subProb.getB(),
+                subQ,
+                sub_q,
+                subIndexX,
+                preX_0
+            );
+            solveSubProblem(subProb_0);
+            
+            double[] preX_1 = subProb.getPreX().clone();
+            preX_0[subProb.getIndexX()[subIndex]] = 1;
+            SubProblem subProb_1 = new SubProblem(
+                subProb.getN()-1,
+                subProb.getM(),
+                subProb.getB()-1,
+                subQ,
+                sub_q,
+                subIndexX,
+                preX_1
+            );
+            solveSubProblem(subProb_1);
+            
+            this.probSet.remove(subProb);
+            if(subProb_0.getLowerBound() < this.upperBound) {
+                this.probSet.add(subProb_0);
+            }
+            if(subProb_1.getLowerBound() < this.upperBound) {
+                this.probSet.add(subProb_1);
+            }
+            
+            if(this.probSet.isEmpty() 
+                    || this.upperBound == this.probSet.getMin().getLowerBound()) {
+                this.showResult();
+                break;
+            }
+        }
+    }
+    
+    private void solveSubProblem(SubProblem subProb) {
+        double[] x = subProb.getInitialGuess();
         subProb.solve(x);
-        for(int i=0; i<x.length; i++) {
-            System.out.println(x[i]);
-        }
+        subProb.setBestX(x);
+        calLowerBound(subProb);
         
-        if(isAllInteger(x)) {
-            checkBest(x, subProb.getIndexX());
+        if(Tool.getTool().isAllInteger(x)) {
+            this.updateBest(subProb);
         }
-        else {
-            upperBound = calUpperBound(subProb.getObjVal());
-            if(upperBound > bestRecord) {
-                // branch: make new sub problem
-                int subIndex = this.findSubIndex(x);
-                double[][] subQ = this.createSubProbMatrixQ(subIndex, subProb.getmQ().getArray());
-                double[][] sub_q = this.createSubProbMatrix_q(subIndex, subProb.getMq().getArray());
-                int[] subIndexX = this.createSubProbIndexX(subIndex, subProb.getIndexX());
-                if(subProb.getN() == 1) {
-                    curX[subProb.getIndexX()[subIndex]] = 0;
-                    checkBest();
-                    if(subProb.getB() >= 1) {
-                        curX[subProb.getIndexX()[subIndex]] = 1;
-                        checkBest();
-                    }
-                }
-                else {
-                    curX[subProb.getIndexX()[subIndex]] = 0;
-                    branchBound(new SubProblem(
-                            subProb.getN()-1,
-                            subProb.getM(),
-                            subProb.getB(),
-                            subQ,
-                            sub_q,
-                            subIndexX
-                    ));
-                    curX[subProb.getIndexX()[subIndex]] = 1;
-                    branchBound(new SubProblem(
-                            subProb.getN()-1,
-                            subProb.getM(),
-                            subProb.getB()-1,
-                            subQ,
-                            sub_q,
-                            subIndexX
-                    ));
-                    curX[subProb.getIndexX()[subIndex]] = -1;
-                }
-            }
-            else {
-                // backtrack
-            }
+    }
+    
+    private void updateBest(SubProblem subProb) {
+        double[] preX = subProb.getPreX();
+        double[] newX = subProb.getBestX();
+        int[] indexX = subProb.getIndexX();
+        for(int i=0; i<this.bestX.length; i++) {
+            this.bestX[i] = preX[i];
         }
+        for(int i=0; i<indexX.length; i++) {
+            this.bestX[indexX[i]] = newX[i];
+        }
+        this.upperBound = this.mainProb.getValue(this.bestX);
+        Tool.getTool().show("new bestX: ", this.bestX);
+        Tool.getTool().show("new upperBound: ", upperBound);
     }
     
     private int findSubIndex(double[] x) {
         int subIndex = 0;
-        double subTemp = x[subIndex];
+        double subTemp = 0;
         double temp;
         for(int i=0; i < x.length; i++) {
             temp = Math.min(x[i]-0, 1-x[i]);
             if(temp > subTemp) {
                 subIndex = i;
-                subTemp = x[subIndex];
+                subTemp = temp;
             }
         }
         return subIndex;
@@ -123,12 +161,24 @@ public class BranchBound {
         double[][] Q = new double[n-1][n-1];
         int i, j;
         i = 0; j = 0;
-        for(int pi=0; (pi<n)&&(pi!=subIndex); pi++) {
-            for(int pj=0; (pj<n)&&(pj!=subIndex); pj++) {
-                Q[i][j] = preQ[pi][pj];
-                j++;
+        for(int pi=0; pi<n; pi++) {
+            if(pi != subIndex) {
+                for(int pj=0; pj<n; pj++) {
+                    if(pj != subIndex) {
+//                        System.out.println("i, j: " + i + ", " + j);
+//                        System.out.println("pi, pj: " + pi + ", " + pj);
+                        Q[i][j] = preQ[pi][pj];
+                        j++;
+                        if(j == Q.length) {
+                            j = 0;
+                        }
+                    }
+                }
+                i++;
+                if(i == Q.length) {
+                    i = 0;
+                }
             }
-            i++;
         }
         return Q;
     }
@@ -137,9 +187,11 @@ public class BranchBound {
         int n = pre_q.length;
         double[][] q = new double[n-1][1];
         int i = 0;
-        for(int pi=0; (pi<n)&&(pi!=subIndex); pi++) {
-            q[i][0] = pre_q[pi][0];
-            i++;
+        for(int pi=0; pi<n; pi++) {
+            if(pi != subIndex) {
+                q[i][0] = pre_q[pi][0];
+                i++;
+            }
         }
         return q;
     }
@@ -148,59 +200,21 @@ public class BranchBound {
         int n = preX.length;
         int[] indexX = new int[n-1];
         int i = 0;
-        for(int pi=0; (pi<n)&&(pi!=subIndex); pi++) {
-            indexX[i] = preX[pi];
-            i++;
+        for(int pi=0; pi<n; pi++) {
+            if(pi != subIndex) {
+                indexX[i] = preX[pi];
+                i++;
+            }
         }
         return indexX;
     }
-    
-    private boolean isAllInteger (double[] x) {
-        for(int i=0; i < x.length; i++) {
-            if(x[i] != Math.round(x[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    private void checkBest (double[] x, int[] indexX) {
-        for(int i=0; i < x.length; i++) {
-            this.curX[indexX[i]] = x[i];
-        }
-        checkBest();
-    }
 
-    private void checkBest() {
-        double[][] temp = new double[curX.length][1];
-        for(int i=0; i < curX.length; i++) {
-            temp[i][0] = curX[i];
-        }
-        double curCheck = this.mainProb.getValue(this.curX);
-        if(curCheck > this.bestRecord) {
-            this.bestRecord = curCheck;
-            this.bestX = new Matrix(temp);
-        }
-    }
-
-    private double calUpperBound(double objVal) {
-        double upperBound = 0;
-        for(int i=0; i < curX.length; i++) {
-            if(curX[i] != -1) {
-                upperBound += curX[i];
-            }
-        }
-        upperBound += objVal;
-        return upperBound;
+    private void calLowerBound(SubProblem subProb) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     private void showResult() {
-        System.out.println("best X[] :");
-        for(int i=0; i<curX.length; i++) {
-            System.out.print(" " + curX[i]);
-        }
-        System.out.println("");
-        System.out.println("best obj_val = " + this.mainProb.getValue(curX));
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
 }

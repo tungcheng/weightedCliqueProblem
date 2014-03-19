@@ -21,6 +21,7 @@ public class Problem {
     private Matrix Q;
     private Matrix q;
     private Matrix I, e;
+    private double lamda;
     
     public Problem(int n) {
         this.n = n;
@@ -70,9 +71,10 @@ public class Problem {
         Q.timesEquals(2); // x2 ma tran Q de co he so 1/2 trong 1/2 * xT * Q * x
         Q.print(4, 1);
         double minEigValue = this.getSmallestEigenvalue();
+        this.lamda = minEigValue;
         if(minEigValue < 0) {
             //double muy = Math.floor(minEigValue);
-            double muy = minEigValue - 0.1;
+            double muy = minEigValue - 0.0001;
             System.out.println("min eigv: " + minEigValue);
             System.out.println("muy: " + muy);
             Matrix temp = I.times(muy);
@@ -87,6 +89,7 @@ public class Problem {
             System.out.println("new q: ");
             q.print(4, 1);
             minEigValue = this.getSmallestEigenvalue();
+            this.lamda = minEigValue;
             System.out.println("min eigv: " + minEigValue);
         }
     }
@@ -126,13 +129,30 @@ public class Problem {
         }
         Matrix mX = new Matrix(temp);
 
-        Matrix t = mX.inverse().times(Q);
+        return getValue(mX);
+    }
+    
+    public double getValue(Matrix mX) {
+        Matrix t = getInverse(mX).times(Q);
         Matrix t2 = t.times(mX);
-        Matrix t3 = q.inverse().times(mX);
+        Matrix t3 = getInverse(q).times(mX);
         
         double obj_value;
         obj_value = 0.5 * t2.get(0, 0) + t3.get(0, 0);
         return obj_value;
     }
     
+    private Matrix getInverse(Matrix mX) {
+        Matrix mXt = new Matrix( mX.getColumnDimension(), mX.getRowDimension());
+        for(int i=0; i<mXt.getRowDimension(); i++) {
+            for(int j=0; j<mXt.getColumnDimension(); j++) {
+                mXt.set(i, j, mX.get(j, i));
+            }
+        }
+        return mXt;
+    }
+
+    public double getLamda() {
+        return lamda;
+    }
 }

@@ -13,7 +13,7 @@ import org.coinor.Ipopt;
  *
  * @author TungNT
  */
-public class SubProblem extends Ipopt {
+public class SubProblem extends Ipopt implements Comparable<SubProblem> {
     
     private int n, m, b, nele_jac, nele_hess;;
     private Matrix mQ, mq;
@@ -22,20 +22,34 @@ public class SubProblem extends Ipopt {
     private Matrix mX;
     
     private int[] indexX;
+    private double lowerBound;
+    private double[] bestX;
+    private double[] preX;
     
-    public SubProblem(int n, int m, int b, double[][] Q, double[][] q, int[] indexX) {
+    public SubProblem(int n, int m, int b, double[][] Q, double[][] q, int[] indexX, double[] preX) {
+        System.out.println("n = " + n);
+        System.out.println("m = " + m);
+        System.out.println("b = " + b);
         this.n = n;
         this.m = m;
         this.b = b;
         this.mQ = new Matrix(Q);
         this.mq = new Matrix(q);
         this.indexX = indexX;
+        this.preX = preX;
+        this.lowerBound = Double.MIN_VALUE;
+        
+        this.mQ.print(4, 1);
+        this.mq.print(4, 1);
         
         temp = new double[this.n][1];
         mX = new Matrix(temp);
         
-        nele_jac = 3;
-        nele_hess = 6;
+        nele_jac = n;
+        nele_hess = n*(n+1)/2;
+        
+        System.out.println("nele_jac = " + nele_jac);
+        System.out.println("nele_hess = " + nele_hess);
         
         double x_L[] = new double[n];
         double x_U[] = new double[n];
@@ -56,10 +70,16 @@ public class SubProblem extends Ipopt {
     public double[] getInitialGuess(){
         /* allocate space for the initial point and set the values */
         double x[] = new double[n];
-        for(int i=0; i<b; i++) {
+        System.out.println("n = " + n);
+        System.out.println("b = " + b);
+//        for(int i=0; i<b; i++) {
+//            x[i] = 1.0;
+//        }
+        int min = (b < n) ? b : n;
+        for(int i=0; i<min; i++) {
             x[i] = 1.0;
         }
-        for(int i=b; i<n; i++) {
+        for(int i=min; i<n; i++) {
             x[i] = 0.0;
         }
 
@@ -73,9 +93,9 @@ public class SubProblem extends Ipopt {
             temp[i][0] = x[i];
         }
 
-        Matrix t = mX.inverse().times(mQ);
+        Matrix t = getInverse(mX).times(mQ);
         Matrix t2 = t.times(mX);
-        Matrix t3 = mq.inverse().times(mX);
+        Matrix t3 = getInverse(mq).times(mX);
         
         obj_value[0] = 0.5 * t2.get(0, 0) + t3.get(0, 0);
 
@@ -89,7 +109,7 @@ public class SubProblem extends Ipopt {
             temp[i][0] = x[i];
         }
         
-        Matrix t = mQ.inverse().plus(mQ);
+        Matrix t = getInverse(mQ).plus(mQ);
         Matrix t2 = t.times(mX);
         Matrix t3 = t2.times(0.5);
         Matrix t4 = mq.plus(t3);
@@ -119,17 +139,15 @@ public class SubProblem extends Ipopt {
             assert m == this.m;
 
             if (values == null) {
-                    iRow[0] = 0;
-                    jCol[0] = 0;
-                    iRow[1] = 0;
-                    jCol[1] = 1;
-                    iRow[2] = 0;
-                    jCol[2] = 2;
+                    for(int i=0; i<n; i++) {
+                        iRow[i] = 0;
+                        jCol[i] = i;
+                    }
             }
             else {
-                    values[0] = 1;
-                    values[1] = 1;
-                    values[2] = 1;
+                    for(int i=0; i<n; i++) {
+                        values[i] = 1;
+                    }
             }
 
             return true;
@@ -153,17 +171,17 @@ public class SubProblem extends Ipopt {
                     assert nele_hess == this.nele_hess;
             }
             else {
-                Matrix t = mQ.inverse().plus(mQ);
+                Matrix t = getInverse(mQ).plus(mQ);
                 Matrix t2 = t.times(0.5);
-                
-                values[0] = obj_factor * t2.get(0, 0);                 /* 0,0 */
-
-                values[1] = obj_factor * t2.get(1, 0);                 /* 1,0 */
-                values[2] = obj_factor * t2.get(1, 1);                 /* 1,1 */
-
-                values[3] = obj_factor * t2.get(2, 0);                 /* 2,0 */
-                values[4] = obj_factor * t2.get(2, 1);                 /* 2,1 */
-                values[5] = obj_factor * t2.get(2, 2);                 /* 2,2 */
+                row = 0; col = 0;
+                for(int i=0; i<this.nele_hess; i++) {
+                    values[i] = obj_factor * t2.get(row, col);
+                    col++;
+                    if(col > row) {
+                        row++;
+                        col = 0;
+                    }
+                }
             }
             return true;
     }    
@@ -191,4 +209,48 @@ public class SubProblem extends Ipopt {
     public int[] getIndexX() {
         return indexX;
     }
+    
+    private Matrix getInverse(Matrix mX) {
+        Matrix mXt = new Matrix( mX.getColumnDimension(), mX.getRowDimension());
+        for(int i=0; i<mXt.getRowDimension(); i++) {
+            for(int j=0; j<mXt.getColumnDimension(); j++) {
+                mXt.set(i, j, mX.get(j, i));
+            }
+        }
+        return mXt;
+    }
+
+    public double getLowerBound() {
+        return lowerBound;
+    }
+
+    public void setLowerBound(double lowerBound) {
+        this.lowerBound = lowerBound;
+    }
+
+    @Override
+    public int compareTo(SubProblem o) {
+        if(this.lowerBound < o.getLowerBound()) {
+            return -1;
+        }
+        else if(this.lowerBound > o.getLowerBound()) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
+    }
+
+    public double[] getBestX() {
+        return bestX;
+    }
+
+    public void setBestX(double[] bestX) {
+        this.bestX = bestX;
+    }
+
+    public double[] getPreX() {
+        return preX;
+    }
+
 }
