@@ -60,7 +60,7 @@ public class SubProblem extends Ipopt implements Comparable<SubProblem> {
         
         double g_L[] = new double[m];
         double g_U[] = new double[m];
-        g_U[0] = 2;
+        g_U[0] = b;
         g_L[0] = (-1)*2e19;
 
         int index_style = Ipopt.C_STYLE;

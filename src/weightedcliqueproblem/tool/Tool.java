@@ -34,6 +34,7 @@ public class Tool {
         for(int i=0; i<x.length; i++) {
             System.out.print(" " + x[i]);
         }
+        System.out.println("");
     }
     
     public void show(String info, double x) {
@@ -46,5 +47,6 @@ public class Tool {
         for(int i=0; i<x.length; i++) {
             System.out.print(" " + x[i]);
         }
+        System.out.println("");
     }
 }

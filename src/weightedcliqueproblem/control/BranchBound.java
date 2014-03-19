@@ -30,7 +30,7 @@ public class BranchBound {
         
         this.init();
         
-        //this.branchBound();
+        this.branchBound();
     }
     
     private void init() {
@@ -57,6 +57,7 @@ public class BranchBound {
         double[] x = startProb.getInitialGuess();
         startProb.solve(x);
         startProb.setBestX(x);
+        Tool.getTool().show("Relax bestX: ", x);
         
         if(Tool.getTool().isAllInteger(x)) {
             // ra ket qua luon
@@ -74,42 +75,48 @@ public class BranchBound {
             double[][] sub_q = this.createSubProbMatrix_q(subIndex, subProb.getMq().getArray());
             int[] subIndexX = this.createSubProbIndexX(subIndex, subProb.getIndexX());
             
-            double[] preX_0 = subProb.getPreX().clone();
-            preX_0[subProb.getIndexX()[subIndex]] = 0;
-            SubProblem subProb_0 = new SubProblem(
-                subProb.getN()-1,
-                subProb.getM(),
-                subProb.getB(),
-                subQ,
-                sub_q,
-                subIndexX,
-                preX_0
-            );
-            solveSubProblem(subProb_0);
-            
-            double[] preX_1 = subProb.getPreX().clone();
-            preX_0[subProb.getIndexX()[subIndex]] = 1;
-            SubProblem subProb_1 = new SubProblem(
-                subProb.getN()-1,
-                subProb.getM(),
-                subProb.getB()-1,
-                subQ,
-                sub_q,
-                subIndexX,
-                preX_1
-            );
-            solveSubProblem(subProb_1);
+            if(subProb.getN() > 1) {
+                double[] preX_0 = subProb.getPreX().clone();
+                preX_0[subProb.getIndexX()[subIndex]] = 0;
+                SubProblem subProb_0 = new SubProblem(
+                    subProb.getN()-1,
+                    subProb.getM(),
+                    subProb.getB(),
+                    subQ,
+                    sub_q,
+                    subIndexX,
+                    preX_0
+                );
+                solveSubProblem(subProb_0);
+
+                double[] preX_1 = subProb.getPreX().clone();
+                preX_1[subProb.getIndexX()[subIndex]] = 1;
+                SubProblem subProb_1 = new SubProblem(
+                    subProb.getN()-1,
+                    subProb.getM(),
+                    subProb.getB()-1,
+                    subQ,
+                    sub_q,
+                    subIndexX,
+                    preX_1
+                );
+                solveSubProblem(subProb_1);
+                
+                Tool.getTool().show("sub 0 lowerBoud: ", subProb_0.getLowerBound());
+                Tool.getTool().show("sub 1 lowerBoud: ", subProb_1.getLowerBound());
+                if(subProb_0.getLowerBound() < this.upperBound) {
+                    this.probSet.add(subProb_0);
+                }
+                if(subProb_1.getLowerBound() < this.upperBound) {
+                    this.probSet.add(subProb_1);
+                }
+            }
             
             this.probSet.remove(subProb);
-            if(subProb_0.getLowerBound() < this.upperBound) {
-                this.probSet.add(subProb_0);
-            }
-            if(subProb_1.getLowerBound() < this.upperBound) {
-                this.probSet.add(subProb_1);
-            }
             
             if(this.probSet.isEmpty() 
-                    || this.upperBound == this.probSet.getMin().getLowerBound()) {
+                    || this.upperBound == this.probSet.getMin().getLowerBound() ) {
+                
                 this.showResult();
                 break;
             }
@@ -120,6 +127,7 @@ public class BranchBound {
         double[] x = subProb.getInitialGuess();
         subProb.solve(x);
         subProb.setBestX(x);
+        Tool.getTool().show("Relax bestX: ", x);
         calLowerBound(subProb);
         
         if(Tool.getTool().isAllInteger(x)) {
@@ -131,9 +139,7 @@ public class BranchBound {
         double[] preX = subProb.getPreX();
         double[] newX = subProb.getBestX();
         int[] indexX = subProb.getIndexX();
-        for(int i=0; i<this.bestX.length; i++) {
-            this.bestX[i] = preX[i];
-        }
+        this.bestX = preX.clone();
         for(int i=0; i<indexX.length; i++) {
             this.bestX[indexX[i]] = newX[i];
         }
@@ -153,6 +159,7 @@ public class BranchBound {
                 subTemp = temp;
             }
         }
+        Tool.getTool().show("SubIndex: ", subIndex);
         return subIndex;
     }
     
@@ -210,11 +217,21 @@ public class BranchBound {
     }
 
     private void calLowerBound(SubProblem subProb) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        double[] preX = subProb.getPreX();
+        double[] newX = subProb.getBestX();
+        int[] indexX = subProb.getIndexX();
+        double[] tempX = preX.clone();
+        for(int i=0; i<indexX.length; i++) {
+            tempX[indexX[i]] = newX[i];
+        }
+        Tool.getTool().show("sub prob X: ", tempX);
+        double lowerBound = this.mainProb.getValue(tempX);
+        subProb.setLowerBound(lowerBound);
     }
 
     private void showResult() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Tool.getTool().show("Last bestX: ", bestX);
+        Tool.getTool().show("Best value: ", this.mainProb.getValue(bestX));
     }
     
 }

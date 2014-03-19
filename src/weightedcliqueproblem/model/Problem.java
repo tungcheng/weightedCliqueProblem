@@ -22,6 +22,7 @@ public class Problem {
     private Matrix q;
     private Matrix I, e;
     private double lamda;
+    private Matrix oldQ;
     
     public Problem(int n) {
         this.n = n;
@@ -68,6 +69,7 @@ public class Problem {
     
     public void makePositiveSemidefinite() {
         Q = new Matrix(c);
+        oldQ = Q.copy();
         Q.timesEquals(2); // x2 ma tran Q de co he so 1/2 trong 1/2 * xT * Q * x
         Q.print(4, 1);
         double minEigValue = this.getSmallestEigenvalue();
@@ -133,12 +135,19 @@ public class Problem {
     }
     
     public double getValue(Matrix mX) {
-        Matrix t = getInverse(mX).times(Q);
+//        Matrix t = getInverse(mX).times(Q);
+//        Matrix t2 = t.times(mX);
+//        Matrix t3 = getInverse(q).times(mX);
+//        
+//        double obj_value;
+//        obj_value = 0.5 * t2.get(0, 0) + t3.get(0, 0);
+//        return obj_value;
+        
+        Matrix t = getInverse(mX).times(oldQ);
         Matrix t2 = t.times(mX);
-        Matrix t3 = getInverse(q).times(mX);
         
         double obj_value;
-        obj_value = 0.5 * t2.get(0, 0) + t3.get(0, 0);
+        obj_value = 0.5 * t2.get(0, 0);
         return obj_value;
     }
     
