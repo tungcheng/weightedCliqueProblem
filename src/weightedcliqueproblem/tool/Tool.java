@@ -88,6 +88,10 @@ public class Tool {
         this.println();
     }
     
+    public void clearAll() {
+        this.log.setText("");
+    }
+    
     private void print(String s) {
         this.log.append(s);
     }

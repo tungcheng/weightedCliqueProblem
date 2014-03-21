@@ -247,6 +247,7 @@ public class BranchBound {
         Tool.getTool().show("Number of interval: ", this.countIter);
         Tool.getTool().show("Last bestX: ", bestX);
         Tool.getTool().show("Best value: ", this.mainProb.getValue(bestX));
+        Tool.getTool().showLine();
     }
     
 }

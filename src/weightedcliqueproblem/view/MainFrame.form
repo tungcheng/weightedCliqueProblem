@@ -54,7 +54,7 @@
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" max="-2" attributes="0">
                   <Component id="bttImport" alignment="0" max="32767" attributes="0"/>
-                  <Component id="bttExport" alignment="0" max="32767" attributes="0"/>
+                  <Component id="bttClearLog" alignment="0" max="32767" attributes="0"/>
                   <Component id="bttSolve" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -74,7 +74,7 @@
               <EmptySpace min="-2" pref="22" max="-2" attributes="0"/>
               <Component id="bttSolve" min="-2" max="-2" attributes="0"/>
               <EmptySpace type="separate" max="-2" attributes="0"/>
-              <Component id="bttExport" min="-2" max="-2" attributes="0"/>
+              <Component id="bttClearLog" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="32767" attributes="0"/>
           </Group>
       </Group>
@@ -105,12 +105,12 @@
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="bttImportActionPerformed"/>
       </Events>
     </Component>
-    <Component class="javax.swing.JButton" name="bttExport">
+    <Component class="javax.swing.JButton" name="bttClearLog">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Export"/>
+        <Property name="text" type="java.lang.String" value="Clear"/>
       </Properties>
       <Events>
-        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="bttExportActionPerformed"/>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="bttClearLogActionPerformed"/>
       </Events>
     </Component>
     <Component class="javax.swing.JButton" name="bttSolve">

@@ -56,7 +56,7 @@ public class MainFrame extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         log = new javax.swing.JTextArea();
         bttImport = new javax.swing.JButton();
-        bttExport = new javax.swing.JButton();
+        bttClearLog = new javax.swing.JButton();
         bttSolve = new javax.swing.JButton();
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
@@ -88,10 +88,10 @@ public class MainFrame extends javax.swing.JFrame {
             }
         });
 
-        bttExport.setText("Export");
-        bttExport.addActionListener(new java.awt.event.ActionListener() {
+        bttClearLog.setText("Clear");
+        bttClearLog.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                bttExportActionPerformed(evt);
+                bttClearLogActionPerformed(evt);
             }
         });
 
@@ -112,7 +112,7 @@ public class MainFrame extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(bttImport, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(bttExport, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(bttClearLog, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(bttSolve, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -128,16 +128,17 @@ public class MainFrame extends javax.swing.JFrame {
                 .addGap(22, 22, 22)
                 .addComponent(bttSolve)
                 .addGap(18, 18, 18)
-                .addComponent(bttExport)
+                .addComponent(bttClearLog)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void bttExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttExportActionPerformed
+    private void bttClearLogActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttClearLogActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_bttExportActionPerformed
+        Tool.getTool().clearAll();
+    }//GEN-LAST:event_bttClearLogActionPerformed
 
     private void bttImportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bttImportActionPerformed
         // TODO add your handling code here:
@@ -201,7 +202,7 @@ public class MainFrame extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton bttExport;
+    private javax.swing.JButton bttClearLog;
     private javax.swing.JButton bttImport;
     private javax.swing.JButton bttSolve;
     private javax.swing.JScrollPane jScrollPane1;
