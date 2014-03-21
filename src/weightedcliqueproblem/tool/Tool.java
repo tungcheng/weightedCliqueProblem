@@ -6,18 +6,32 @@
 
 package weightedcliqueproblem.tool;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import javax.swing.JTextArea;
+
 /**
  *
  * @author TungNT
  */
 public class Tool {
+    private final String newline = "\n";
+    
     private static Tool instance;
+    
+    private JTextArea log;
+    NumberFormat fm;
     
     public static Tool getTool() {
         if(instance == null) {
             instance = new Tool();
         }
         return instance;
+    }
+    
+    public void setWriter(JTextArea log) {
+        this.log = log;
+        fm = new DecimalFormat("#0.0000");
     }
     
     public boolean isAllInteger (double[] x) {
@@ -29,24 +43,61 @@ public class Tool {
         return true;
     }
     
+    public long getTimeNow() {
+        return System.currentTimeMillis();
+    }
+    
     public void show(String info, double[] x) {
-        System.out.println(info);
-        for(int i=0; i<x.length; i++) {
-            System.out.print(" " + x[i]);
+        this.println(info);
+        for(int i=0; i<x.length-1; i++) {
+            this.print(" " + fm.format(x[i]) + ";");
         }
-        System.out.println("");
+        this.print(" " + fm.format(x[x.length-1]) + "");
+        this.println();
+    }
+    
+    public void show(String info) {
+        this.println(info);
     }
     
     public void show(String info, double x) {
-        System.out.println(info);
-        System.out.println(x);
+        this.print(info);
+        this.println(fm.format(x));
+    }
+    
+    public void show(String info, int x) {
+        this.print(info);
+        this.println(x+"");
+    }
+    
+    public void show(String info, long x) {
+        this.print(info);
+        this.println(x+"");
+    }
+    
+    public void showLine() {
+        this.println("--------------");
     }
     
     public void show(String info, int[] x) {
-        System.out.println(info);
-        for(int i=0; i<x.length; i++) {
-            System.out.print(" " + x[i]);
+        this.println(info);
+        for(int i=0; i<x.length-1; i++) {
+            this.print(" " + x[i] + ";");
         }
-        System.out.println("");
+        this.print(" " + x[x.length-1] + "");
+        this.println();
+    }
+    
+    private void print(String s) {
+        this.log.append(s);
+    }
+    
+    private void println(String s) {
+        this.log.append(s);
+        this.log.append(newline);
+    }
+    
+    private void println() {
+        this.log.append(newline);
     }
 }

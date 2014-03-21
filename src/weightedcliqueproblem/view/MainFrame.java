@@ -7,14 +7,12 @@
 package weightedcliqueproblem.view;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import weightedcliqueproblem.control.BranchBound;
 import weightedcliqueproblem.control.ImportProblem;
 import weightedcliqueproblem.model.Problem;
+import weightedcliqueproblem.tool.Tool;
 
 /**
  *
@@ -37,8 +35,10 @@ public class MainFrame extends javax.swing.JFrame {
         FileNameExtensionFilter filter = new FileNameExtensionFilter("TEXT FILES (.txt)", "txt", "text");
         fc.setFileFilter(filter);
         
+        Tool.getTool().setWriter(log);
         importProb = new ImportProblem();
         
+        this.setResizable(true);
         this.setLocationRelativeTo(null);
     }
 
@@ -146,14 +146,14 @@ public class MainFrame extends javax.swing.JFrame {
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             try {
                 File file = fc.getSelectedFile();
-                log.append("Opening: " + file.getName() + "." + newline);
+                Tool.getTool().show("Open: " + file.getName());
                 mainProb = importProb.importFromFile(file);
-                log.append("Done. Ready to solve.");
+                Tool.getTool().show("Done. Ready to solve.");
             } catch (Exception ex) {
-                log.append("Error: Cannot import data from file");
+                Tool.getTool().show("Error: Cannot import data from file");
             }
         } else {
-            log.append("Open command cancelled by user." + newline);
+            Tool.getTool().show("Open command cancelled by user." + newline);
         }
         log.setCaretPosition(log.getDocument().getLength());
     }//GEN-LAST:event_bttImportActionPerformed

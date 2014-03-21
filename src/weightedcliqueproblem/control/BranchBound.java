@@ -17,13 +17,20 @@ import weightedcliqueproblem.tool.Tool;
  */
 public class BranchBound {
     
-    private Problem mainProb;
+    private static final int MAX_ITERVAL = 1000;
+    private int countIter;
+    private long startTime;
+    private long endTime;
+    
+    private final Problem mainProb;
     private double upperBound;
     private double[] bestX;
     private ProblemSet probSet;
     
     public BranchBound (Problem prob) {
         mainProb = prob;
+        countIter = 0;
+        startTime = Tool.getTool().getTimeNow();
         
         bestX = new double[prob.getN()];
         
@@ -33,6 +40,7 @@ public class BranchBound {
     }
     
     private void init() {
+        Tool.getTool().showLine();
         upperBound = Double.MAX_VALUE;
         probSet = new ProblemSet();
         
@@ -66,7 +74,10 @@ public class BranchBound {
     }
 
     private void branchBound() {
-        while(true) {
+        while(countIter < BranchBound.MAX_ITERVAL) {
+            countIter++;
+            Tool.getTool().showLine();
+            Tool.getTool().show("Iterval ID: ", countIter);
             SubProblem subProb = probSet.getMin();
             int subIndex = this.findSubIndex(subProb.getBestX());
             
@@ -229,6 +240,11 @@ public class BranchBound {
     }
 
     private void showResult() {
+        endTime = Tool.getTool().getTimeNow();
+        Tool.getTool().showLine();
+        long solveTime = this.endTime - this.startTime;
+        Tool.getTool().show("Solve time (ms): ", solveTime);
+        Tool.getTool().show("Number of interval: ", this.countIter);
         Tool.getTool().show("Last bestX: ", bestX);
         Tool.getTool().show("Best value: ", this.mainProb.getValue(bestX));
     }

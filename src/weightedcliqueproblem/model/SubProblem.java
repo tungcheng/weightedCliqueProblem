@@ -247,6 +247,11 @@ public class SubProblem extends Ipopt implements Comparable<SubProblem> {
 
     public void setBestX(double[] bestX) {
         this.bestX = bestX;
+        if(this.b == 0) {
+            for(int i=0; i<this.bestX.length; i++) {
+                this.bestX[i] = 0;
+            }
+        }
     }
 
     public double[] getPreX() {
