@@ -6,7 +6,6 @@
 
 package weightedcliqueproblem.control;
 
-import Jama.Matrix;
 import weightedcliqueproblem.model.Problem;
 import weightedcliqueproblem.model.ProblemSet;
 import weightedcliqueproblem.model.SubProblem;

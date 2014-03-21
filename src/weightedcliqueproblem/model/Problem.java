@@ -147,7 +147,7 @@ public class Problem {
         Matrix t2 = t.times(mX);
         
         double obj_value;
-        obj_value = 0.5 * t2.get(0, 0);
+        obj_value = t2.get(0, 0);
         return obj_value;
     }
     
