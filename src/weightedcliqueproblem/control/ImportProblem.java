@@ -39,7 +39,7 @@ public class ImportProblem {
         if(!pb.isSymmetric()) {
             throw new Exception();
         }
-        pb.makePositiveSemidefinite();
+        pb.handleInputMatrix();
         return pb;
     }
 }

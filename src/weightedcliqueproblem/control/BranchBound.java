@@ -6,6 +6,7 @@
 
 package weightedcliqueproblem.control;
 
+import Jama.Matrix;
 import weightedcliqueproblem.model.Problem;
 import weightedcliqueproblem.model.ProblemSet;
 import weightedcliqueproblem.model.SubProblem;
@@ -55,8 +56,9 @@ public class BranchBound {
             mainProb.getN(),
             1,
             mainProb.getB(),
-            mainProb.getQ().getArray(),
-            mainProb.get_q().getArray(),
+            mainProb.getQ(),
+            mainProb.get_q(),
+            0,
             startIndex,
             preX
         );
@@ -81,8 +83,9 @@ public class BranchBound {
             SubProblem subProb = probSet.getMin();
             int subIndex = this.findSubIndex(subProb.getBestX());
             
-            double[][] subQ = this.createSubProbMatrixQ(subIndex, subProb.getmQ().getArray());
-            double[][] sub_q = this.createSubProbMatrix_q(subIndex, subProb.getMq().getArray());
+            Matrix subQ = this.createSubProbMatrixQ(subIndex, subProb.getmQ());
+            Matrix sub_q = this.createSubProbMatrix_q(subIndex, subProb.getMq());
+            Matrix sub_q1 = this.createSubProbMatrix_q1(sub_q, subProb.getmQ(), subIndex);
             int[] subIndexX = this.createSubProbIndexX(subIndex, subProb.getIndexX());
             
             if(subProb.getN() > 1) {
@@ -94,6 +97,7 @@ public class BranchBound {
                     subProb.getB(),
                     subQ,
                     sub_q,
+                    subProb.getD(),
                     subIndexX,
                     preX_0
                 );
@@ -106,7 +110,8 @@ public class BranchBound {
                     subProb.getM(),
                     subProb.getB()-1,
                     subQ,
-                    sub_q,
+                    sub_q1,
+                    subProb.getD() + 0.5*subProb.getmQ().get(subIndex, subIndex),
                     subIndexX,
                     preX_1
                 );
@@ -115,9 +120,11 @@ public class BranchBound {
                 Tool.getTool().show("sub 0 lowerBoud: ", subProb_0.getLowerBound());
                 Tool.getTool().show("sub 1 lowerBoud: ", subProb_1.getLowerBound());
                 if(subProb_0.getLowerBound() < this.upperBound) {
+                    Tool.getTool().show("add subProb_0 to problemSet");
                     this.probSet.add(subProb_0);
                 }
                 if(subProb_1.getLowerBound() < this.upperBound) {
+                    Tool.getTool().show("add subProb_1 to problemSet");
                     this.probSet.add(subProb_1);
                 }
             }
@@ -125,7 +132,7 @@ public class BranchBound {
             this.probSet.remove(subProb);
             
             if(this.probSet.isEmpty() 
-                    || this.upperBound == this.probSet.getMin().getLowerBound() ) {
+                    || this.upperBound <= this.probSet.getMin().getLowerBound() ) {
                 
                 this.showResult();
                 break;
@@ -140,7 +147,7 @@ public class BranchBound {
         Tool.getTool().show("Relax bestX: ", x);
         calLowerBound(subProb);
         
-        if(Tool.getTool().isAllInteger(x)) {
+        if(Tool.getTool().isAllInteger(x) && subProb.getValue(x) < this.upperBound) {
             this.updateBest(subProb);
         }
     }
@@ -153,7 +160,8 @@ public class BranchBound {
         for(int i=0; i<indexX.length; i++) {
             this.bestX[indexX[i]] = newX[i];
         }
-        this.upperBound = this.mainProb.getValue(this.bestX);
+//        this.upperBound = this.mainProb.getValue(this.bestX);
+        this.upperBound = subProb.getLowerBound();
         Tool.getTool().show("new bestX: ", this.bestX);
         Tool.getTool().show("new upperBound: ", upperBound);
     }
@@ -173,9 +181,9 @@ public class BranchBound {
         return subIndex;
     }
     
-    private double[][] createSubProbMatrixQ (int subIndex, double[][] preQ) {
-        int n = preQ.length;
-        double[][] Q = new double[n-1][n-1];
+    private Matrix createSubProbMatrixQ (int subIndex, Matrix preQ) {
+        int n = preQ.getRowDimension();
+        Matrix Q = new Matrix(n-1, n-1);
         int i, j;
         i = 0; j = 0;
         for(int pi=0; pi<n; pi++) {
@@ -184,15 +192,15 @@ public class BranchBound {
                     if(pj != subIndex) {
 //                        System.out.println("i, j: " + i + ", " + j);
 //                        System.out.println("pi, pj: " + pi + ", " + pj);
-                        Q[i][j] = preQ[pi][pj];
+                        Q.set(i, j, preQ.get(pi, pj));
                         j++;
-                        if(j == Q.length) {
+                        if(j == Q.getRowDimension()) {
                             j = 0;
                         }
                     }
                 }
                 i++;
-                if(i == Q.length) {
+                if(i == Q.getRowDimension()) {
                     i = 0;
                 }
             }
@@ -200,13 +208,13 @@ public class BranchBound {
         return Q;
     }
     
-    private double[][] createSubProbMatrix_q (int subIndex, double[][] pre_q) {
-        int n = pre_q.length;
-        double[][] q = new double[n-1][1];
+    private Matrix createSubProbMatrix_q (int subIndex, Matrix pre_q) {
+        int n = pre_q.getRowDimension();
+        Matrix q = new Matrix(n-1, 1);
         int i = 0;
         for(int pi=0; pi<n; pi++) {
             if(pi != subIndex) {
-                q[i][0] = pre_q[pi][0];
+                q.set(i, 0, pre_q.get(pi, 0));
                 i++;
             }
         }
@@ -235,7 +243,8 @@ public class BranchBound {
             tempX[indexX[i]] = newX[i];
         }
         Tool.getTool().show("sub prob X: ", tempX);
-        double lowerBound = this.mainProb.getValue(tempX);
+//        double lowerBound = this.mainProb.getValue(tempX);
+        double lowerBound = subProb.getObjVal();
         subProb.setLowerBound(lowerBound);
     }
 
@@ -248,6 +257,21 @@ public class BranchBound {
         Tool.getTool().show("Last bestX: ", bestX);
         Tool.getTool().show("Best value: ", this.mainProb.getValue(bestX));
         Tool.getTool().showLine();
+    }
+
+    private Matrix createSubProbMatrix_q1(Matrix sub_q, Matrix mQ, int subIndex) {
+        int n = mQ.getRowDimension();
+        Matrix col = new Matrix(n - 1, 1);
+        
+        int ti = 0;
+        for(int i=0; i<n; i++) {
+            if(i != subIndex) {
+                col.set(ti, 0, mQ.get(i, subIndex));
+                ti++;
+            }
+        }
+        Matrix q1 = sub_q.plus(col);
+        return q1;
     }
     
 }
