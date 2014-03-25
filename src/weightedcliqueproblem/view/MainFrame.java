@@ -31,7 +31,7 @@ public class MainFrame extends javax.swing.JFrame {
     public MainFrame() {
         initComponents();
         
-        fc = new JFileChooser();
+        fc = new JFileChooser("./");
         FileNameExtensionFilter filter = new FileNameExtensionFilter("TEXT FILES (.txt)", "txt", "text");
         fc.setFileFilter(filter);
         
