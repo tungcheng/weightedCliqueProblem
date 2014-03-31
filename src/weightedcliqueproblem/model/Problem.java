@@ -74,16 +74,6 @@ public class Problem {
         return q;
     }
     
-    private Matrix getInverse(Matrix mX) {
-        Matrix mXt = new Matrix( mX.getColumnDimension(), mX.getRowDimension());
-        for(int i=0; i<mXt.getRowDimension(); i++) {
-            for(int j=0; j<mXt.getColumnDimension(); j++) {
-                mXt.set(i, j, mX.get(j, i));
-            }
-        }
-        return mXt;
-    }
-    
     public double getValue(double[] x) {
         double[][] temp = new double[x.length][1];
         for(int i=0; i<this.n; i++) {
@@ -95,7 +85,7 @@ public class Problem {
     }
     
     public double getValue(Matrix mX) {
-        Matrix t = getInverse(mX).times(this.Q);
+        Matrix t = mX.transpose().times(this.Q);
         Matrix t2 = t.times(mX);
 //        Matrix t3 = getInverse(q).times(mX);
         

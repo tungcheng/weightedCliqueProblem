@@ -6,7 +6,6 @@
 
 package weightedcliqueproblem.model;
 
-import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
 import org.coinor.Ipopt;
 
@@ -14,25 +13,18 @@ import org.coinor.Ipopt;
  *
  * @author TungNT
  */
-public class SubProblem extends Ipopt implements Comparable<SubProblem> {
-    
+public class SubDCA extends Ipopt {
+
     private int n, m, b, nele_jac, nele_hess;;
     private Matrix mQ, mq;
-    private double d;
     
     private Matrix mSPDQ, mSPDq;
     
     private Matrix mX;
     
-    private Matrix I, e;
-    private double minEig;
+    private Matrix I;
     
-    private int[] indexX;
-    private double lowerBound;
-    private double[] bestX;
-    private double[] preX;
-    
-    public SubProblem(int n, int m, int b, Matrix Q, Matrix q, double d, int[] indexX, double[] preX) {
+    public SubDCA(int n, int m, int b, Matrix Q, Matrix q, double ro, double[] y) {
         System.out.println("n = " + n);
         System.out.println("m = " + m);
         System.out.println("b = " + b);
@@ -41,21 +33,14 @@ public class SubProblem extends Ipopt implements Comparable<SubProblem> {
         this.b = b;
         this.mQ = Q;
         this.mq = q;
-        this.d = d;
-        this.indexX = indexX;
-        this.preX = preX;
-        this.lowerBound = Double.MIN_VALUE;
         
-        this.makePositiveSemidefinite();
+        changeObjFunction(ro, y);
         
         double[][] temp = new double[this.n][1];
         mX = new Matrix(temp);
         
         nele_jac = n;
         nele_hess = n*(n+1)/2;
-        
-        System.out.println("nele_jac = " + nele_jac);
-        System.out.println("nele_hess = " + nele_hess);
         
         double x_L[] = new double[n];
         double x_U[] = new double[n];
@@ -98,7 +83,7 @@ public class SubProblem extends Ipopt implements Comparable<SubProblem> {
         Matrix t2 = t.times(mX);
         Matrix t3 = mSPDq.transpose().times(mX);
         
-        obj_value[0] = 0.5 * t2.get(0, 0) + t3.get(0, 0) + this.d;
+        obj_value[0] = 0.5 * t2.get(0, 0) + t3.get(0, 0);
 
         return true;
     }
@@ -207,68 +192,8 @@ public class SubProblem extends Ipopt implements Comparable<SubProblem> {
         return mq;
     }
 
-    public int[] getIndexX() {
-        return indexX;
-    }
-
-    public double getLowerBound() {
-        return lowerBound;
-    }
-
-    public void setLowerBound(double lowerBound) {
-        this.lowerBound = lowerBound;
-    }
-
-    @Override
-    public int compareTo(SubProblem o) {
-        if(this.lowerBound < o.getLowerBound()) {
-            return -1;
-        }
-        else if(this.lowerBound > o.getLowerBound()) {
-            return 1;
-        }
-        else {
-            return 0;
-        }
-    }
-
-    public double[] getBestX() {
-        return bestX;
-    }
-
-    public void setBestX(double[] bestX) {
-        this.bestX = bestX;
-        if(this.b == 0) {
-            for(int i=0; i<this.bestX.length; i++) {
-                this.bestX[i] = 0;
-            }
-        }
-    }
-
-    public double[] getPreX() {
-        return preX;
-    }
-
-    private double getSmallestEigenvalue(Matrix m) {
-        EigenvalueDecomposition ed = m.eig();
-        Matrix x = ed.getD();
-        double min = x.get(0, 0);
-        for(int i=0; i<n; i++) {
-            if(min > x.get(i, i)) {
-                min = x.get(i, i);
-            }
-        }
-        return min;
-    }
-    
-    private void makePositiveSemidefinite() {
+    private void changeObjFunction(double ro, double[] y) {
         double[][] temp;
-        temp = new double[n][1];
-        for(int i=0; i<n; i++) {
-            temp[i][0] = 1;
-        }
-        e = new Matrix(temp);
-        
         temp = new double[n][n];
         for(int i=0; i<n; i++) {
             for(int j=0; j<n; j++) {
@@ -279,44 +204,13 @@ public class SubProblem extends Ipopt implements Comparable<SubProblem> {
         
         this.mSPDQ = this.mQ.copy();
         this.mSPDq = this.mq.copy();
-        double minEigValue = this.getSmallestEigenvalue(this.mSPDQ);
-        if(minEigValue < 0) {
-            double muy = minEigValue - 0.0001;
-            this.minEig = muy;
-            Matrix mt = I.times(muy);
-            mSPDQ.minusEquals(mt);
-            
-            muy *= 0.5;
-            mt = e.times(muy);
-            mSPDq.plusEquals(mt);
-        }
-    }
-
-    public double getD() {
-        return d;
-    }
-    
-    public double getValue(double[] x) {
-        double[][] temp = new double[x.length][1];
-        for(int i=0; i<this.n; i++) {
-            temp[i][0] = x[i];
-        }
-        Matrix mX = new Matrix(temp);
-
-        return getValue(mX);
-    }
-    
-    public double getValue(Matrix mX) {
-        Matrix t = mX.transpose().times(this.mQ);
-        Matrix t2 = t.times(mX);
-        Matrix t3 = mq.transpose().times(mX);
         
-        double obj_value;
-        obj_value = 0.5*t2.get(0, 0) + t3.get(0, 0) + this.d;
-        return obj_value;
+        Matrix mt = I.times(ro);
+        mSPDQ.minusEquals(mt);
+
+        for(int i=0; i<mq.getRowDimension(); i++) {
+            mSPDq.set(i, 0, mq.get(i, 0) - y[i]);
+        }
     }
 
-    public double getMinEig() {
-        return minEig;
-    }
 }

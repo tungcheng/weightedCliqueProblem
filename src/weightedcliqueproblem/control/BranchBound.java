@@ -9,6 +9,7 @@ package weightedcliqueproblem.control;
 import Jama.Matrix;
 import weightedcliqueproblem.model.Problem;
 import weightedcliqueproblem.model.ProblemSet;
+import weightedcliqueproblem.model.SubDCA;
 import weightedcliqueproblem.model.SubProblem;
 import weightedcliqueproblem.tool.Tool;
 
@@ -18,7 +19,7 @@ import weightedcliqueproblem.tool.Tool;
  */
 public class BranchBound {
     
-    private static final int MAX_ITERVAL = 1000;
+    private static final int MAX_ITERVAL = 500;
     private int countIter;
     private long startTime;
     private long endTime;
@@ -82,7 +83,7 @@ public class BranchBound {
                 Runtime.getRuntime().gc();
             }
             if(countIter == BranchBound.MAX_ITERVAL) {
-                Tool.getTool().show("Max iterval reach: 1000 itervals");
+                Tool.getTool().show("Max iterval reach: " + BranchBound.MAX_ITERVAL +" itervals");
             }
             
             Tool.getTool().showLine();
@@ -154,6 +155,7 @@ public class BranchBound {
         Tool.getTool().show("Relax bestX: ", x);
         calLowerBound(subProb);
         calUpperBound(subProb);
+        solveDCA(subProb);
         
         if(Tool.getTool().isAllInteger(x) && subProb.getValue(x) <= this.upperBound) {
             this.updateBest(subProb);
@@ -307,6 +309,28 @@ public class BranchBound {
             }
         }
         return intX;
+    }
+
+    private void solveDCA(SubProblem subProb) {
+        double[] x = subProb.getBestX();
+        double[] y = new double[x.length];
+        double ro = subProb.getMinEig();
+        for(int i=0; i<x.length; i++) {
+            y[i] = (x[i] >= 0.5) ? (1 - 0.5*ro) : (-1 - 0.5*ro);
+        }
+        SubDCA subDCA = new SubDCA(
+                subProb.getN(),
+                subProb.getM(),
+                subProb.getB(),
+                subProb.getmQ(),
+                subProb.getMq(),
+                ro,
+                y
+        );
+        double[] x2 = subDCA.getInitialGuess();
+        subDCA.solve(x2);
+        Tool.getTool().show("DCA x: ", x2);
+        Tool.getTool().show("DCA objF: ", subDCA.getObjVal());
     }
     
 }
