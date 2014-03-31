@@ -152,6 +152,7 @@ public class MainFrame extends javax.swing.JFrame {
                 Tool.getTool().show("Done. Ready to solve.");
             } catch (Exception ex) {
                 Tool.getTool().show("Error: Cannot import data from file");
+                ex.printStackTrace();
             }
         } else {
             Tool.getTool().show("Open command cancelled by user." + newline);

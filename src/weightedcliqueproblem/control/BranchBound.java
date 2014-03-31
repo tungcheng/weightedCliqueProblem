@@ -78,6 +78,13 @@ public class BranchBound {
     private void branchBound() {
         while(countIter < BranchBound.MAX_ITERVAL) {
             countIter++;
+            if(countIter % 50 == 0) {
+                Runtime.getRuntime().gc();
+            }
+            if(countIter == BranchBound.MAX_ITERVAL) {
+                Tool.getTool().show("Max iterval reach: 1000 itervals");
+            }
+            
             Tool.getTool().showLine();
             Tool.getTool().show("Iterval ID: ", countIter);
             SubProblem subProb = probSet.getMin();
@@ -190,8 +197,6 @@ public class BranchBound {
             if(pi != subIndex) {
                 for(int pj=0; pj<n; pj++) {
                     if(pj != subIndex) {
-//                        System.out.println("i, j: " + i + ", " + j);
-//                        System.out.println("pi, pj: " + pi + ", " + pj);
                         Q.set(i, j, preQ.get(pi, pj));
                         j++;
                         if(j == Q.getRowDimension()) {
@@ -243,7 +248,6 @@ public class BranchBound {
             tempX[indexX[i]] = newX[i];
         }
         Tool.getTool().show("sub prob X: ", tempX);
-//        double lowerBound = this.mainProb.getValue(tempX);
         double lowerBound = subProb.getObjVal();
         subProb.setLowerBound(lowerBound);
     }

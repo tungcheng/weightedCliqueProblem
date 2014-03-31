@@ -47,9 +47,6 @@ public class SubProblem extends Ipopt implements Comparable<SubProblem> {
         
         this.makePositiveSemidefinite();
         
-        this.mQ.print(4, 1);
-        this.mq.print(4, 1);
-        
         double[][] temp = new double[this.n][1];
         mX = new Matrix(temp);
         
@@ -78,11 +75,6 @@ public class SubProblem extends Ipopt implements Comparable<SubProblem> {
     public double[] getInitialGuess(){
         /* allocate space for the initial point and set the values */
         double x[] = new double[n];
-        System.out.println("n = " + n);
-        System.out.println("b = " + b);
-//        for(int i=0; i<b; i++) {
-//            x[i] = 1.0;
-//        }
         int min = (b < n) ? b : n;
         for(int i=0; i<min; i++) {
             x[i] = 1.0;
@@ -299,20 +291,12 @@ public class SubProblem extends Ipopt implements Comparable<SubProblem> {
         double minEigValue = this.getSmallestEigenvalue(this.mSPDQ);
         if(minEigValue < 0) {
             double muy = minEigValue - 0.0001;
-//            System.out.println("min eigv: " + minEigValue);
-//            System.out.println("muy: " + muy);
             Matrix mt = I.times(muy);
             mSPDQ.minusEquals(mt);
             
             muy *= 0.5;
             mt = e.times(muy);
             mSPDq.plusEquals(mt);
-            
-//            System.out.println("new Q: ");
-//            mQ.print(4, 1);
-//            System.out.println("new q: ");
-//            mq.print(4, 1);
-//            minEigValue = this.getSmallestEigenvalue(mQ);
         }
     }
 

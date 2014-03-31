@@ -37,6 +37,7 @@ public class ImportProblem {
             }
         }
         if(!pb.isSymmetric()) {
+            System.out.println("not symetric");
             throw new Exception();
         }
         pb.handleInputMatrix();
