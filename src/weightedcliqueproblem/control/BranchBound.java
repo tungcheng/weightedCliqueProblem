@@ -153,8 +153,9 @@ public class BranchBound {
         subProb.setBestX(x);
         Tool.getTool().show("Relax bestX: ", x);
         calLowerBound(subProb);
+        calUpperBound(subProb);
         
-        if(Tool.getTool().isAllInteger(x) && subProb.getValue(x) < this.upperBound) {
+        if(Tool.getTool().isAllInteger(x) && subProb.getValue(x) <= this.upperBound) {
             this.updateBest(subProb);
         }
     }
@@ -276,6 +277,36 @@ public class BranchBound {
         }
         Matrix q1 = sub_q.plus(col);
         return q1;
+    }
+
+    private void calUpperBound(SubProblem subProb) {
+        double[] x = roundX(subProb.getBestX(), subProb.getB());
+        double value = subProb.getValue(x);
+        if(value < this.upperBound) {
+            this.upperBound = subProb.getValue(x);
+            Tool.getTool().show("Upper X: ", x);
+            Tool.getTool().show("New upperBound: ", upperBound);
+        }
+    }
+
+    private double[] roundX(double[] doubleX, int b) {
+        double[] intX = new double[doubleX.length];
+        int count = 0;
+        for(int i=0; i<doubleX.length; i++) {
+            if(count < b) {
+                if(doubleX[i] < 0.5) {
+                    intX[i] = 0;
+                }
+                else {
+                    intX[i] = 1;
+                    count++;
+                }
+            }
+            else {
+                intX[i] = 0;
+            }
+        }
+        return intX;
     }
     
 }
