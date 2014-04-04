@@ -84,6 +84,7 @@ public class BranchBound {
             }
             if(countIter == BranchBound.MAX_ITERVAL) {
                 Tool.getTool().show("Max iterval reach: " + BranchBound.MAX_ITERVAL +" itervals");
+                break;
             }
             
             Tool.getTool().showLine();
