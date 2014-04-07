@@ -31,7 +31,7 @@ public class Tool {
     
     public void setWriter(JTextArea log) {
         this.log = log;
-        fm = new DecimalFormat("#0.0000");
+        fm = new DecimalFormat("#0.####");
     }
     
     public boolean isAllInteger (double[] x) {

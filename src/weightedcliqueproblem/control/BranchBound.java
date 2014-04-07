@@ -19,7 +19,7 @@ import weightedcliqueproblem.tool.Tool;
  */
 public class BranchBound {
     
-    private static final int MAX_ITERVAL = 500;
+    private static final int MAX_ITERVAL = 200;
     private int countIter;
     private long startTime;
     private long endTime;
@@ -128,6 +128,7 @@ public class BranchBound {
                 
                 Tool.getTool().show("sub 0 lowerBoud: ", subProb_0.getLowerBound());
                 Tool.getTool().show("sub 1 lowerBoud: ", subProb_1.getLowerBound());
+                Tool.getTool().show("current upperBound: ", this.upperBound);
                 if(subProb_0.getLowerBound() < this.upperBound) {
                     Tool.getTool().show("add subProb_0 to problemSet");
                     this.probSet.add(subProb_0);
@@ -156,7 +157,6 @@ public class BranchBound {
         Tool.getTool().show("Relax bestX: ", x);
         calLowerBound(subProb);
         calUpperBound(subProb);
-        solveDCA(subProb);
         
         if(Tool.getTool().isAllInteger(x) && subProb.getValue(x) <= this.upperBound) {
             this.updateBest(subProb);
@@ -164,17 +164,19 @@ public class BranchBound {
     }
     
     private void updateBest(SubProblem subProb) {
+        makeBestX(subProb, subProb.getBestX());
+        this.upperBound = subProb.getLowerBound();
+        Tool.getTool().show("new bestX: ", this.bestX);
+        Tool.getTool().show("new upperBound: ", upperBound);
+    }
+    
+    private void makeBestX(SubProblem subProb, double[] newX) {
         double[] preX = subProb.getPreX();
-        double[] newX = subProb.getBestX();
         int[] indexX = subProb.getIndexX();
         this.bestX = preX.clone();
         for(int i=0; i<indexX.length; i++) {
             this.bestX[indexX[i]] = newX[i];
         }
-//        this.upperBound = this.mainProb.getValue(this.bestX);
-        this.upperBound = subProb.getLowerBound();
-        Tool.getTool().show("new bestX: ", this.bestX);
-        Tool.getTool().show("new upperBound: ", upperBound);
     }
     
     private int findSubIndex(double[] x) {
@@ -283,11 +285,12 @@ public class BranchBound {
     }
 
     private void calUpperBound(SubProblem subProb) {
-        double[] x = roundX(subProb.getBestX(), subProb.getB());
+        double[] x = roundX(this.solveDCA(subProb), subProb.getB());
         double value = subProb.getValue(x);
         if(value < this.upperBound) {
+            this.makeBestX(subProb, x);
             this.upperBound = subProb.getValue(x);
-            Tool.getTool().show("Upper X: ", x);
+            Tool.getTool().show("New best X: ", x);
             Tool.getTool().show("New upperBound: ", upperBound);
         }
     }
@@ -312,26 +315,42 @@ public class BranchBound {
         return intX;
     }
 
-    private void solveDCA(SubProblem subProb) {
+    private double[] solveDCA(SubProblem subProb) {
         double[] x = subProb.getBestX();
         double[] y = new double[x.length];
         double ro = subProb.getMinEig();
-        for(int i=0; i<x.length; i++) {
-            y[i] = (x[i] >= 0.5) ? (1 - 0.5*ro) : (-1 - 0.5*ro);
+        double[] x1 = new double[x.length];
+        double[] x2 = new double[x.length];
+        System.arraycopy(x, 0, x2, 0, x2.length);
+        do {
+            System.arraycopy(x2, 0, x1, 0, x1.length);
+            for(int i=0; i<x1.length; i++) {
+                y[i] = (x1[i] >= 0.5) ? (1 - 0.5*ro) : (-1 - 0.5*ro);
+            }
+            SubDCA subDCA = new SubDCA(
+                    subProb.getN(),
+                    subProb.getM(),
+                    subProb.getB(),
+                    subProb.getmQ(),
+                    subProb.getMq(),
+                    ro,
+                    y
+            );
+            x2 = subDCA.getInitialGuess();
+            subDCA.solve(x2);
+            Tool.getTool().show("DCA x: ", x2);
+            Tool.getTool().show("DCA deltaX: ", deltaX(x1, x2));
         }
-        SubDCA subDCA = new SubDCA(
-                subProb.getN(),
-                subProb.getM(),
-                subProb.getB(),
-                subProb.getmQ(),
-                subProb.getMq(),
-                ro,
-                y
-        );
-        double[] x2 = subDCA.getInitialGuess();
-        subDCA.solve(x2);
-        Tool.getTool().show("DCA x: ", x2);
-        Tool.getTool().show("DCA objF: ", subDCA.getObjVal());
+        while(deltaX(x1, x2) >= 0.03);
+        return x2;
+    }
+    
+    private double deltaX(double[] x1, double[] x2) {
+        double sum = 0;
+        for(int i=0; i<x1.length; i++) {
+            sum += (x1[i] - x2[i])*(x1[i] - x2[i]);
+        }
+        return Math.sqrt(sum);
     }
     
 }
